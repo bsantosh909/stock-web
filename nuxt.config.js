@@ -42,10 +42,6 @@ export default {
     '/api': {
       target: 'https://merolagani.com/handlers',
       pathRewrite: { '^/api': '/' },
-    },
-    '/predict': {
-      target: 'http://localhost:8000',
-      pathRewrite: { '^/predict': '/' },
     }
   },
 

@@ -15,19 +15,6 @@
                 <span> {{ stat.value }} </span>
             </div>
         </div>
-        <div v-if="trained" class="mt-10 p-4 bg-gray-200 w-full mx-auto" align="center">
-            <button v-if="!prediction" class="px-2 py-1 bg-green-400" @click="loadPredictionResult">
-                Load Prediction Result
-            </button>
-            <div v-if="prediction" class="mb-5">
-                <span class="text-sm">Accuracy:</span>
-                <span class="font-semibold"> {{ accuracy || '-' }}% </span>
-            </div>
-            <div id="predictions"></div>
-        </div>
-        <div v-else class="text-center mt-5">
-            <span class="text-xl">Model has not been trained yet!</span>
-        </div>
     </div>
     <div v-else class="container mx-auto pb-10">
         <span class="text-6xl">Data not available for selected company!</span>
@@ -65,9 +52,7 @@ export default {
                 item.v
             ])
 
-            const { data: trained } = await $axios.get(`/predict/model/has/?name=${params.code.toUpperCase()}`);
-
-            return { stock: formatted, info: companies.find(c => c.code === params.code), success: true, trained: !!trained.success };
+            return { stock: formatted, info: companies.find(c => c.code === params.code), success: true };
         } catch(err) {
             console.log(err)
             return { success: false };
@@ -97,55 +82,6 @@ export default {
                 { title: 'All Time High', value: allTimeHigh },
                 { title: 'All Time Low', value: allTimeLow }
             ]
-        }
-    },
-    methods: {
-        async loadPredictionResult() {
-            const { data } = await this.$axios.get(`/predict/model/test/?name=${this.$route.params.code.toUpperCase()}`)
-            this.prediction = data;
-
-            let _cleaning = 0;
-            for (let i=0; i<data.actual.length; i++) {
-                let value = data.actual[i]/data.predicted[i];
-                value = value > 1 ? 1/value : value;
-                _cleaning += (value * 100)
-            }
-            _cleaning = _cleaning / data.actual.length
-
-            if (_cleaning > 90) _cleaning -= 15;
-            else if (_cleaning > 80) _cleaning -= 5;
-            this.accuracy = _cleaning.toFixed(2);
-
-            const length = 15
-            const predictedData = new Array(length + 1).fill(null);
-            predictedData[length] = Math.round(data.predicted.slice(data.predicted.length - 1));
-
-            HighCharts.chart('predictions', {
-                chart: { type: 'line' },
-                title: { text: `Prediction of ${this.$route.params.code.toUpperCase()}'s Stock` },
-                yAxis: {
-                    title: { text: 'Price (Rs.)' }
-                },
-                tooltip: {
-                    shared: true,
-                    crosshairs: true
-                },
-                plotOptions: {
-                    line: { enableMouseTracking: true }
-                },
-                series: [
-                    {
-                        name: 'Prediction',
-                        data: predictedData,
-                        // data: data.predicted.map(itm => Math.round(itm)).slice(data.predicted.length - length),
-                        color: 'red'
-                    },
-                    {
-                        name: 'Current Trend',
-                        data: data.actual.map(itm => Math.round(itm)).slice(data.actual.length - length)
-                    }
-                ]
-            })
         }
     },
     async mounted() {
