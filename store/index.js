@@ -10,7 +10,7 @@ export const mutations = {
 
 export const actions = {
     async getCompanies({ commit, state }) {
-        if (state.companies.length) return state.companies;
+        // if (state.companies.length) return state.companies;
 
         const { data } = await this.$axios.post('/api/AutoSuggestHandler.ashx?type=Company');
         const output = data.map(item => ({
